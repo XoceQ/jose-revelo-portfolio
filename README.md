@@ -114,17 +114,4 @@ Send the printed link to the client. The amount is signed and cannot be edited, 
 | `GET` | `/api/orders/{reference}` | Returns the verified order status |
 | `POST` | `/api/webhooks/mercadopago` | Receives signed notifications |
 
-## Payment security
 
-- Credentials exist only in backend environment variables.
-- Prices come from the server catalog or a signed link, never from the browser.
-- Webhook signatures use HMAC-SHA256 and constant-time comparison, following the official Mercado Pago SDK.
-- A webhook only triggers a lookup. Status comes from the Mercado Pago API.
-- An order is approved only if the amount and currency match exactly.
-- Parameters on the browser return URL are ignored.
-
-## Before going live
-
-- Have a qualified professional review the Privacy Policy and Terms for your business.
-- The public CV in `public/cv/` includes your phone number. Replace it if you do not want that indexed.
-- Confirm you have permission to display each client's website and name.
