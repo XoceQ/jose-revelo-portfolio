@@ -1,15 +1,14 @@
-import { CheckCircle2, Github, Linkedin, Loader2, Mail, Send } from 'lucide-react';
+import { Github, Linkedin, Mail, Send } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { profile } from '../data/profile';
 import { budgetRanges, projectTypes, type ProjectType } from '../data/services';
 import { useLanguage } from '../hooks/useLanguage';
-import { CONTACT_ENDPOINT } from '../lib/api';
 import { Reveal } from './Section';
 
 const emptyForm = { name: '', email: '', projectType: '', budget: '', message: '' };
 type FormState = typeof emptyForm;
 type Field = keyof FormState;
-type Status = 'idle' | 'sending' | 'success' | 'failure' | 'emailOpened';
+type Status = 'idle' | 'emailOpened';
 
 function validate(form: FormState) {
   const invalid: Field[] = [];
@@ -22,10 +21,9 @@ function validate(form: FormState) {
 }
 
 export default function Contact({ presetType }: { presetType: ProjectType | '' }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const c = t.contact;
   const [form, setForm] = useState<FormState>(emptyForm);
-  const [honeypot, setHoneypot] = useState('');
   const [errors, setErrors] = useState<Field[]>([]);
   const [status, setStatus] = useState<Status>('idle');
 
@@ -36,7 +34,7 @@ export default function Contact({ presetType }: { presetType: ProjectType | '' }
   const update = (field: Field, value: string) => {
     setForm((current) => ({ ...current, [field]: value }));
     setErrors((current) => current.filter((item) => item !== field));
-    if (status !== 'sending') setStatus('idle');
+    setStatus('idle');
   };
 
   const readable = () => ({
@@ -44,7 +42,7 @@ export default function Contact({ presetType }: { presetType: ProjectType | '' }
     budget: form.budget ? c.budgets[form.budget as keyof typeof c.budgets] : '',
   });
 
-  const submit = async (event: FormEvent) => {
+  const submit = (event: FormEvent) => {
     event.preventDefault();
     const invalid = validate(form);
     setErrors(invalid);
@@ -52,39 +50,12 @@ export default function Contact({ presetType }: { presetType: ProjectType | '' }
       document.getElementById(`contact-${invalid[0]}`)?.focus();
       return;
     }
-    if (honeypot) return;
 
     const { type, budget } = readable();
-
-    if (!CONTACT_ENDPOINT) {
-      const subject = `${c.projectType}: ${type}`;
-      const body = `${c.name}: ${form.name}\n${c.emailField}: ${form.email}\n${c.projectType}: ${type}\n${c.budget}: ${budget}\n\n${form.message}`;
-      window.location.href = `mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      setStatus('emailOpened');
-      return;
-    }
-
-    setStatus('sending');
-    try {
-      const response = await fetch(CONTACT_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          email: form.email.trim(),
-          projectType: type,
-          budget,
-          message: form.message.trim(),
-          language,
-          _subject: `Portfolio inquiry: ${type}`,
-        }),
-      });
-      if (!response.ok) throw new Error('contact-failed');
-      setForm(emptyForm);
-      setStatus('success');
-    } catch {
-      setStatus('failure');
-    }
+    const subject = `${c.projectType}: ${type}`;
+    const body = `${c.name}: ${form.name}\n${c.emailField}: ${form.email}\n${c.projectType}: ${type}\n${c.budget}: ${budget}\n\n${form.message}`;
+    window.location.href = `mailto:${profile.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setStatus('emailOpened');
   };
 
   const fieldProps = (field: Field) => ({
@@ -141,12 +112,6 @@ export default function Contact({ presetType }: { presetType: ProjectType | '' }
 
         <Reveal delay={0.08}>
           <form onSubmit={submit} noValidate className="card p-6 md:p-8">
-            <div aria-hidden className="absolute -left-[9999px]">
-              <label>
-                Website
-                <input tabIndex={-1} autoComplete="off" value={honeypot} onChange={(event) => setHoneypot(event.target.value)} />
-              </label>
-            </div>
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <label htmlFor="contact-name" className="label">{c.name}</label>
@@ -185,21 +150,15 @@ export default function Contact({ presetType }: { presetType: ProjectType | '' }
               </div>
             </div>
 
-            {!CONTACT_ENDPOINT && status === 'idle' && <p className="mt-5 text-xs leading-relaxed text-muted">{c.emailNotice}</p>}
+            {status === 'idle' && <p className="mt-5 text-xs leading-relaxed text-muted">{c.emailNotice}</p>}
 
             <div aria-live="polite">
-              {status === 'success' && (
-                <p className="mt-5 flex gap-2 rounded-lg bg-emerald-500/10 p-3 text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                  <CheckCircle2 size={18} className="shrink-0" aria-hidden /> {c.success}
-                </p>
-              )}
               {status === 'emailOpened' && <p className="mt-5 rounded-lg bg-sky-brand/10 p-3 text-sm font-medium text-accent">{c.emailOpened}</p>}
-              {status === 'failure' && <p role="alert" className="mt-5 rounded-lg bg-red-500/10 p-3 text-sm font-medium text-red-700 dark:text-red-300">{c.failure}</p>}
             </div>
 
-            <button type="submit" className="btn-primary mt-5 w-full" disabled={status === 'sending'}>
-              {status === 'sending' ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Send size={16} aria-hidden />}
-              {status === 'sending' ? c.sending : CONTACT_ENDPOINT ? c.submit : c.submitEmail}
+            <button type="submit" className="btn-primary mt-5 w-full">
+              <Send size={16} aria-hidden />
+              {c.submitEmail}
             </button>
             <p className="mt-3 text-center text-xs text-muted">
               {c.privacy}{' '}

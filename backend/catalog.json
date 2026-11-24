@@ -1,9 +1,0 @@
-{
-  "currency": "COP",
-  "items": [
-    { "id": "backend", "title": { "en": "Backend Development", "es": "Desarrollo Backend" }, "unit_price": null },
-    { "id": "websites", "title": { "en": "Website Development", "es": "Desarrollo Web" }, "unit_price": null },
-    { "id": "automation", "title": { "en": "Automation & AI Solutions", "es": "Automatización y Soluciones con IA" }, "unit_price": null },
-    { "id": "infrastructure", "title": { "en": "IT Infrastructure & Cybersecurity", "es": "Infraestructura TI y Ciberseguridad" }, "unit_price": null }
-  ]
-}

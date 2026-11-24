@@ -4,8 +4,6 @@ dist/
 .env
 .env.*
 !.env.example
-backend/.venv/
-backend/data/
 *.db
 __pycache__/
 .pytest_cache/

@@ -1,29 +1,14 @@
 import { ArrowRight, Check } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { services, type ProjectType } from '../data/services';
 import { useLanguage } from '../hooks/useLanguage';
-import { formatMoney, getCatalog, PAYMENT_API, type CatalogItem } from '../lib/api';
 import { Reveal, SectionHeading } from './Section';
 
 interface ServicesProps {
   onQuote: (type: ProjectType) => void;
-  onBuy: (item: CatalogItem) => void;
 }
 
-export default function Services({ onQuote, onBuy }: ServicesProps) {
-  const { t, language } = useLanguage();
-  const [catalog, setCatalog] = useState<CatalogItem[]>([]);
-
-  useEffect(() => {
-    if (!PAYMENT_API) return;
-    let active = true;
-    // If the backend is unreachable, cards correctly fall back to "Request a Quote".
-    getCatalog().then((items) => active && setCatalog(items)).catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, []);
-
+export default function Services({ onQuote }: ServicesProps) {
+  const { t } = useLanguage();
   return (
     <section id="services" aria-labelledby="services-title" className="section bg-soft">
       <div className="container">
@@ -31,7 +16,6 @@ export default function Services({ onQuote, onBuy }: ServicesProps) {
         <div className="grid gap-5 md:grid-cols-2">
           {services.map(({ id, icon: Icon }, index) => {
             const copy = t.services.items[id];
-            const item = catalog.find((entry) => entry.id === id);
             return (
               <Reveal key={id} delay={index * 0.05}>
                 <article className="card flex h-full flex-col p-7 transition duration-200 hover:border-primary/50 hover:shadow-lift">
@@ -50,25 +34,10 @@ export default function Services({ onQuote, onBuy }: ServicesProps) {
                     ))}
                   </ul>
                   <div className="mt-7 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-sm font-semibold text-ink">
-                      {item ? (
-                        <>
-                          <span className="font-normal text-muted">{t.services.priceLabel} </span>
-                          {formatMoney(item.unit_price, item.currency, language)}
-                        </>
-                      ) : (
-                        t.services.requestQuote
-                      )}
-                    </p>
-                    {item ? (
-                      <button type="button" className="btn-primary" onClick={() => onBuy(item)}>
-                        {t.services.buy}
-                      </button>
-                    ) : (
-                      <button type="button" className="btn-primary" onClick={() => onQuote(id)} aria-label={`${t.services.quoteCta}: ${copy.name}`}>
-                        {t.services.quoteCta} <ArrowRight size={16} aria-hidden />
-                      </button>
-                    )}
+                    <p className="text-sm font-semibold text-ink">{t.services.requestQuote}</p>
+                    <button type="button" className="btn-primary" onClick={() => onQuote(id)} aria-label={`${t.services.quoteCta}: ${copy.name}`}>
+                      {t.services.quoteCta} <ArrowRight size={16} aria-hidden />
+                    </button>
                   </div>
                 </article>
               </Reveal>
